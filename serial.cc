@@ -2,6 +2,9 @@
 #include <iostream>
 #include "ftd2xx.h"
 #include "vector"
+#include <thread>
+#include <chrono>
+ 
 
 //
 // Some fancy MPSSE (Multi-Protocol Synchronous Serial Engine) Commands
@@ -10,9 +13,9 @@
 enum mpsse : unsigned char
 {
     SET_D_BUS_DATA               = 0x80, // 0xVALUE, 0xDIRECTION (1 = output)
-    READ_D_BUS_DATA              = 0x81,
+    GET_D_BUS_DATA               = 0x81,
     SET_C_BUS_DATA               = 0x82, // 0xVALUE, 0xDIRECTION (1 = output)
-    READ_C_BUS_DATA              = 0x83,
+    GET_C_BUS_DATA               = 0x83,
     LOOPBACK_ENABLE              = 0x84,
     LOOPBACK_DISABLE             = 0x85,
     SET_TCK_DIVISOR              = 0x86, // VAL_L, VAL_H
@@ -97,6 +100,7 @@ public: // constructor ////////////////////////////////////////////////////////
 
     ~SerialConnection()
     {
+        FT_SetBitMode(ft_handle, 0x0, 0x00);
         FT_Close(ft_handle);
     }
 
@@ -111,7 +115,7 @@ public: // publicest methods //////////////////////////////////////////////////
     // Simple c++11 wrapper to write some data and check that it went through.
     // Give it a byte vector that you don't care about since it'll eat it
     //
-    bool write_data(ByteVector_t data)
+    bool write_data(ByteVector_t data) const
     {
         const unsigned int bytes_to_send = data.size();
         unsigned int bytes_sent = 0;
@@ -129,7 +133,7 @@ public: // publicest methods //////////////////////////////////////////////////
     // read them, clear them, and return the data
     // TODO: Timeouts
     //
-    ByteVector_t block_and_read(const unsigned int num_bytes_to_read)
+    ByteVector_t block_and_read(const unsigned int num_bytes_to_read) const
     {
         unsigned int bytes_ready = 0;
         FT_STATUS ft_status = FT_OK;
@@ -166,6 +170,46 @@ public: // publicest methods //////////////////////////////////////////////////
         return recv_buffer;
     }
 
+    //
+    // Request the data that is on a pin. According to the documentation, there are two
+    // pin sets: D and C. D is the lower byte and C is the upper byte. The Pin number
+    // here will start at 0 for D0 and end at 15 for C7. C8 and C9 are reserved
+    //
+    // TODO: There could be a more efficient implementation that could check multiple
+    //       pins at once, but I don't plan to use this for much
+    //
+    bool get_pin(const size_t pin_number) const
+    {
+        //
+        // Check if we need to query the upper pins or lower pins
+        // `pin_number_offset` is the bit number in the set, ie `pin_number`
+        // may be 8 meaning the caller wants C0, but for the bit shift we want
+        // an offset in the byte
+        //
+        size_t pin_number_offset = pin_number;
+        ByteVector_t request = {mpsse::GET_D_BUS_DATA};
+        if(pin_number > 7)
+        {
+            pin_number_offset -= 8;
+            request[0] = mpsse::GET_C_BUS_DATA;
+        }
+
+        write_data(request);
+
+        ByteVector_t response = block_and_read(1);
+        std::cout << static_cast<uint16_t>(response[0]) << std::endl;
+        return (response[0] >> pin_number_offset) & 1;
+    }
+
+    //
+    // Set a pin with the same rules as above
+    //
+    void set_pin(const size_t pin_number, bool high) const
+    {
+        ByteVector_t request = {mpsse::SET_D_BUS_DATA, 0x00, 0xFB};
+        request[1] = high ? 0xFF : 0x00;
+        write_data(request);
+    }
 
 public: // more public methods ////////////////////////////////////////////////
     //
@@ -264,9 +308,81 @@ private: // members ///////////////////////////////////////////////////////////
 
 };
 
+class NeoPixelCommunitron
+{
+public: // types //////////////////////////////////////////////////////////////
+    using ms = std::chrono::milliseconds;
+    using us = std::chrono::microseconds;
+    using ns = std::chrono::nanoseconds;
+    using generator = std::function<void()>;
+
+public: // constructor ////////////////////////////////////////////////////////
+    //
+    // Gives an easy interface for converting bytes to neopixel command packets
+    // This doesn't build color packets, it just does the translation
+    // https://learn.adafruit.com/adafruit-neopixel-uberguide/advanced-coding
+    //
+    NeoPixelCommunitron(SerialConnection &s_, const size_t data_pin_) :
+        s(s_), data_pin(data_pin_)
+    { };
+
+public: // methods ///////////////////////////////////////////////////////////
+    //
+    // Given a byte, send it over the wire to the display
+    //
+    inline void sent_byte(unsigned char byte)
+    {
+        unsigned char mask = 0x80;
+        for (size_t i = 0; i < 8; ++i)
+        {
+            byte * mask == 0 ? zero() : one();
+            mask = mask >> 1;
+        }
+    }
+
+    //
+    // Call between groups of LED color data
+    //
+    inline void done()
+    {
+        s.set_pin(data_pin, 0);
+        std::this_thread::sleep_for(us(50));
+    }
+
+private: // methods ///////////////////////////////////////////////////////////
+
+    inline void one() const
+    {
+        s.set_pin(data_pin, 1);
+        std::this_thread::sleep_for(ns(850));
+        s.set_pin(data_pin, 0);
+        std::this_thread::sleep_for(ns(450));
+    }
+    inline void zero() const
+    {
+        s.set_pin(data_pin, 0);
+        std::this_thread::sleep_for(ns(400));
+        s.set_pin(data_pin, 1);
+        std::this_thread::sleep_for(ns(800));
+    }
+
+private: // members ///////////////////////////////////////////////////////////
+    SerialConnection s;
+    size_t data_pin;
+};
+
 int main()
 {
     SerialConnection s;
     s.run_comms_check();
     s.configure_mpsse_defaults();
+    NeoPixelCommunitron comms(s, 5);
+
+    while(true)
+    {
+        comms.sent_byte(0xFF);
+        comms.sent_byte(0xFF);
+        comms.sent_byte(0xFF);
+        comms.done();
+    }
 }
