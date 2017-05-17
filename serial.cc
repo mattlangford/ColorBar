@@ -207,9 +207,10 @@ bool SerialConnection::get_pin(const size_t pin_number) const
 
 void SerialConnection::set_pin(const size_t pin_number, bool high) const
 {
-    ByteVector_t request = {mpsse::SET_D_BUS_DATA, 0x00, 0xFB};
-    request[1] = high ? 0xFF : 0x00;
-    write_data(request);
+    // TODO: Fix this so it doesn't set the whole row
+    // ByteVector_t request = {mpsse::SET_D_BUS_DATA, 0x00, 0xFB};
+    // request[1] = high ? 0xFF : 0x00;
+    // write_data(request);
 }
 
 //

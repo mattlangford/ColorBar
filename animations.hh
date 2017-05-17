@@ -1,19 +1,37 @@
+#include <stddef.h>
+
 namespace colorama
 {
 
+using uchar_t = unsigned char;
 
 struct Color
 {
-    unsigned char R;
-    unsigned char G;
-    unsigned char B;
+    uchar_t R;
+    uchar_t G;
+    uchar_t B;
+    uchar_t A;
 
-    Color(const unsigned char R_, const unsigned char G_, const unsigned char B_) :
-        R(R_), G(G_), B(B_)
+    //
+    // Default is black
+    //
+    Color() :
+        R(0), G(0), B(0), A(255)
+    {
+    }
+
+    Color(const uchar_t R_, const uchar_t G_, const uchar_t B_) :
+        R(R_), G(G_), B(B_), A(255)
+    {
+    }
+
+    Color(const uchar_t R_, const uchar_t G_, const uchar_t B_, const uchar_t A_) :
+        R(R_), G(G_), B(B_), A(A_)
     {
     }
 };
 
+static Color BLACK = Color(0, 0, 0);
 static Color BLUE = Color(0, 0, 255);
 static Color RED = Color(255, 0, 0);
 
@@ -27,22 +45,22 @@ template <unsigned int led_count>
 struct Frame
 {
     //
-    // Matches LED numbers one to one. Index 0 represents the first LED.
+    // Matches LED numbers one to one. Index 0 represents the first LED
     //
     Color colors[led_count];
 
     //
-    // How long (in seconds) it will take to fade between the previous
-    // frame and this frame.
+    // How long (in seconds) should we hold on this frame before going to the
+    // next
     //
-    double prefade_s = 0.0;
+    double hold_s = 0.0;
 
     //
     // Should we keep the previous frame where we don't have defined colors
     //
     bool use_previous = false;
-};
 
+};
 
 template <unsigned int led_count>
 class AnimationBuilder
