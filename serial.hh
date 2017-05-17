@@ -10,7 +10,8 @@ namespace serial
 //
 enum mpsse : unsigned char
 {
-    MSB_R_EDGE_OUT               = 0x10, // 0xLENGTH_L, 0xLENGTH_H, 0xDATA...  - on pin D0
+    MSB_R_EDGE_OUT_BYTE          = 0x10, // 0xLENGTH_L, 0xLENGTH_H, 0xDATA...  - on pin D0
+    MSB_R_EDGE_OUT_BIT           = 0x13, // 0xLENGTH_L, 0xLENGTH_H, 0xDATA...  - on pin D0
     SET_D_BUS_DATA               = 0x80, // 0xVALUE, 0xDIRECTION (1 = output)
     GET_D_BUS_DATA               = 0x81,
     SET_C_BUS_DATA               = 0x82, // 0xVALUE, 0xDIRECTION (1 = output)

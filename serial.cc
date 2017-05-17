@@ -1,6 +1,12 @@
 #include "serial.hh"
 #include <assert.h>
 #include <iostream>
+#include <thread>
+#include <chrono>
+#include <iomanip>
+#include <algorithm>
+
+
 
 namespace serial
 {
@@ -37,7 +43,7 @@ SerialConnection::SerialConnection(const unsigned int device_number)
     //
     // Now let's configure our device, to do that first we need to reset the receive buffer
     //
-    FT_STATUS ft_status;
+    FT_STATUS ft_status = FT_OK;
     DWORD num_bytes_to_read = 0;
     DWORD num_bytes_read = 0;
     ft_status |= FT_ResetDevice(ft_handle);
@@ -55,17 +61,19 @@ SerialConnection::SerialConnection(const unsigned int device_number)
     //
     // Some needed configs
     //
-    //Set USB request transfer sizes to 64K
+    // Set USB request transfer sizes to 64K
     ft_status |= FT_SetUSBParameters(ft_handle, 65536, 65535);
-    //Disable event and error characters
+    // Disable event and error characters
     ft_status |= FT_SetChars(ft_handle, false, 0, false, 0);
-    //Sets the read and write timeouts in milliseconds
+    // Sets the read and write timeouts in milliseconds
     ft_status |= FT_SetTimeouts(ft_handle, 0, 5000);
-    //Set the latency timer to 1mS (default is 16mS) 
+    // Set the latency timer to 1mS (default is 16mS) 
     ft_status |= FT_SetLatencyTimer(ft_handle, 1); 
-    //Turn on flow control to synchronize IN requests
+    // Turn on flow control to synchronize IN requests
     ft_status |= FT_SetFlowControl(ft_handle, FT_FLOW_RTS_CTS, 0x00, 0x00);
-    //Enable MPSSE mode
+    // Reset controller
+    ft_status |= FT_SetBitMode(ft_handle, 0x0, 0x00);
+    // Enable MPSSE mode
     ft_status |= FT_SetBitMode(ft_handle, 0x0, 0x02);
 
     assert(ft_status == FT_OK);
@@ -91,6 +99,13 @@ bool SerialConnection::write_data(ByteVector_t data) const
     const unsigned int bytes_to_send = data.size();
     unsigned int bytes_sent = 0;
     FT_STATUS ft_status = FT_Write(ft_handle, data.data(), bytes_to_send, &bytes_sent);
+
+    // for (BYTE &b : data)
+    // {
+    //     std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (uint32_t) b << " ";
+    // }
+    // std::cout << "(" << ft_status << ")" << " sent: " << bytes_sent << std::endl;
+
     if (status_okay(ft_status) == false)
     {
         return false;
@@ -146,14 +161,14 @@ SerialConnection::ByteVector_t SerialConnection::block_and_read(const unsigned i
 
 bool SerialConnection::spi_write_data(ByteVector_t data) const
 {
-    const uint16_t data_length = data.size();
+    const uint16_t data_length = data.size() - 1;
     const BYTE length_L = data_length & 0xFF;
     const BYTE length_H = (data_length >> 8);
 
     //
     // Append header data
     //
-    ByteVector_t header_data = {mpsse::MSB_R_EDGE_OUT, length_L, length_H};
+    ByteVector_t header_data = {mpsse::MSB_R_EDGE_OUT_BYTE, length_L, length_H};
     data.insert(data.begin(), header_data.begin(), header_data.end());
 
     return write_data(std::move(data));
@@ -214,12 +229,12 @@ void SerialConnection::configure_spi_defaults() const
     //
     // We want a 6mhz clock, this divisor does that according to documentation
     //
-    write_data({mpsse::SET_TCK_DIVISOR, 0x04, 0x00});
+    write_data({mpsse::SET_TCK_DIVISOR, 0x05, 0x00});
 
     //
     // We need to configure the default value and direction for both D and C pins
     //
-    write_data({mpsse::SET_D_BUS_DATA, 0x80, 0x0B});
+    write_data({mpsse::SET_D_BUS_DATA, 0xC9, 0xFB});
     write_data({mpsse::SET_C_BUS_DATA, 0x00, 0x00});
 
     write_data({mpsse::LOOPBACK_DISABLE});
@@ -285,4 +300,40 @@ inline void SerialConnection::check_bad_response(const ByteVector_t &recv_buffer
         std::cout << std::endl;
     }
 }
-}// namespace serial
+} // namespace serial
+
+enum bits : unsigned char
+{
+    ZERO = 0xC0,
+    ONE = 0xF8
+};
+
+int main()
+{
+    serial::SerialConnection s;
+    s.configure_spi_defaults();
+
+    serial::SerialConnection::ByteVector_t on(24 * 24, bits::ONE);
+    serial::SerialConnection::ByteVector_t off(24 * 24, bits::ZERO);
+    serial::SerialConnection::ByteVector_t green(24 * 24, bits::ZERO);
+    for (size_t i = 0; i < 1; ++i)
+    {
+        for (size_t j = 0; j < 8; ++j)
+        {
+            green[i + j] = bits::ONE;
+        }
+        for (size_t j = 0; j < 16; ++j)
+        {
+            green[8 + j] = bits::ZERO;
+        }
+    }
+
+    while (true)
+    {
+        s.spi_write_data(green);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        s.spi_write_data(off);
+        std::rotate(green.begin(), green.begin()+24, green.end());
+    }
+    return 0;
+}
