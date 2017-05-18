@@ -118,6 +118,12 @@ class CommunicationBase
 //
 // Base class that provides general interface for displaying Frames on a display
 //
+public: // types //////////////////////////////////////////////////////////////
+    //
+    //
+    //
+    using ByteVector_t = SerialConnection::ByteVector_t;
+
 public: // constructor ////////////////////////////////////////////////////////
     //
     //

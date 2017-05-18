@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <stddef.h>
 #include <vector>
 
@@ -51,10 +52,9 @@ struct Frame
     std::vector<Color> colors;
 
     //
-    // How long (in seconds) should we hold on this frame before going to the
-    // next
+    // How long should we hold on this frame before going to the next
     //
-    double hold_s = 0.0;
+    std::chrono::duration<double, std::chrono::milliseconds> hold_time;
 };
 
 class FramePlayer
