@@ -21,6 +21,8 @@ SerialConnection::SerialConnection(const unsigned int device_number)
     // Let's do some basic set up of the port here, don't trust me - trust
     // http://www.ftdichip.com/Support/Documents/AppNotes/AN_135_MPSSE_Basics.pdf
     //
+    //TEMP
+    return;
 
     //
     // First check if there is a valid device to use
@@ -302,39 +304,3 @@ inline void SerialConnection::check_bad_response(const ByteVector_t &recv_buffer
     }
 }
 } // namespace serial
-
-enum bits : unsigned char
-{
-    ZERO = 0xC0,
-    ONE = 0xF8
-};
-
-int main()
-{
-    serial::SerialConnection s;
-    s.configure_spi_defaults();
-
-    serial::SerialConnection::ByteVector_t on(24 * 24, bits::ONE);
-    serial::SerialConnection::ByteVector_t off(24 * 24, bits::ZERO);
-    serial::SerialConnection::ByteVector_t green(24 * 24, bits::ZERO);
-    for (size_t i = 0; i < 1; ++i)
-    {
-        for (size_t j = 0; j < 8; ++j)
-        {
-            green[i + j] = bits::ONE;
-        }
-        for (size_t j = 0; j < 16; ++j)
-        {
-            green[8 + j] = bits::ZERO;
-        }
-    }
-
-    while (true)
-    {
-        s.spi_write_data(green);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        s.spi_write_data(off);
-        std::rotate(green.begin(), green.begin()+24, green.end());
-    }
-    return 0;
-}

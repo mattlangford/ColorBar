@@ -1,5 +1,7 @@
+#pragma once
 #include "ftd2xx.h"
 #include <vector>
+#include "animations.hh"
 
 namespace serial
 {
@@ -109,6 +111,41 @@ private: // members ///////////////////////////////////////////////////////////
     //
     FT_HANDLE ft_handle;
 
+};
+
+class CommunicationBase
+{
+//
+// Base class that provides general interface for displaying Frames on a display
+//
+public: // constructor ////////////////////////////////////////////////////////
+    //
+    //
+    //
+    CommunicationBase(const SerialConnection &s) : serial(s) {};
+
+    //
+    //
+    //
+    virtual ~CommunicationBase() {};
+
+public: // methods ///////////////////////////////////////////////////////////
+    //
+    // Given a frame, use the internal serial device to send the frame over
+    // the wire
+    //
+    virtual void send_frame(const animations::Frame &f) = 0;
+
+    //
+    // Returns the serial connection
+    //
+    inline SerialConnection get_serial() const { return serial; };
+
+private: // members ///////////////////////////////////////////////////////////
+    //
+    //
+    //
+    SerialConnection serial;
 };
 
 } // namespace serial
