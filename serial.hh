@@ -38,6 +38,8 @@ class SerialConnection
 public: // constructor ////////////////////////////////////////////////////////
     SerialConnection(const unsigned int device_number = 0);
 
+    SerialConnection(const SerialConnection &s);
+
     ~SerialConnection();
 
 public: // types //////////////////////////////////////////////////////////////
@@ -128,7 +130,7 @@ public: // constructor ////////////////////////////////////////////////////////
     //
     //
     //
-    CommunicationBase(const SerialConnection &s) : serial(s) {};
+    CommunicationBase() = default;
 
     //
     //
@@ -140,18 +142,8 @@ public: // methods ///////////////////////////////////////////////////////////
     // Given a frame, use the internal serial device to send the frame over
     // the wire
     //
-    virtual void send_frame(const animations::Frame &f) = 0;
+    virtual ByteVector_t build_frame(const animations::Frame &f) = 0;
 
-    //
-    // Returns the serial connection
-    //
-    inline SerialConnection get_serial() const { return serial; };
-
-private: // members ///////////////////////////////////////////////////////////
-    //
-    //
-    //
-    SerialConnection serial;
 };
 
 } // namespace serial

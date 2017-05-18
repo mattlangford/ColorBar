@@ -84,6 +84,15 @@ SerialConnection::SerialConnection(const unsigned int device_number)
 // ############################################################################
 //
 
+SerialConnection::SerialConnection(const SerialConnection &s)
+{
+    ft_handle = s.ft_handle;
+}
+
+//
+// ############################################################################
+//
+
 SerialConnection::~SerialConnection()
 {
     FT_SetBitMode(ft_handle, 0x0, 0x00);
@@ -96,7 +105,7 @@ SerialConnection::~SerialConnection()
 
 bool SerialConnection::write_data(ByteVector_t data) const
 {
-    const unsigned int bytes_to_send = static_cast<unsigned int>(data.size());
+    const unsigned int bytes_to_send = data.size();
     unsigned int bytes_sent = 0;
     FT_STATUS ft_status = FT_Write(ft_handle, data.data(), bytes_to_send, &bytes_sent);
 
@@ -161,7 +170,7 @@ SerialConnection::ByteVector_t SerialConnection::block_and_read(const unsigned i
 
 bool SerialConnection::spi_write_data(ByteVector_t data) const
 {
-    const uint16_t data_length = static_cast<uint16_t>(data.size() - 1);
+    const uint16_t data_length = data.size() - 1;
     const BYTE length_L = data_length & 0xFF;
     const BYTE length_H = (data_length >> 8);
 

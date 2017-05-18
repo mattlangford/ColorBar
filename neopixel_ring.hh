@@ -8,11 +8,6 @@ public: // destructor /////////////////////////////////////////////////////////
     //
     //
     //
-    NeopixelComms(const serial::SerialConnection &s);
-
-    //
-    //
-    //
     ~NeopixelComms() {};
 
 public: // types //////////////////////////////////////////////////////////////
@@ -26,7 +21,7 @@ public: // methods ////////////////////////////////////////////////////////////
     //
     // Send a frame to the neopixel display one byte at a time
     //
-    void send_frame(const animations::Frame &f);
+    ByteVector_t build_frame(const animations::Frame &f);
 
 private: // methods ///////////////////////////////////////////////////////////
     //

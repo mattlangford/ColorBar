@@ -3,19 +3,10 @@
 #include "neopixel_ring.hh"
 
 //
-// ### constructor ############################################################
-//
-
-NeopixelComms::NeopixelComms(const serial::SerialConnection &s)
-    : CommunicationBase(s)
-{
-};
-
-//
 // ### public methods #########################################################
 //
 
-void NeopixelComms::send_frame(const animations::Frame &f)
+NeopixelComms::ByteVector_t NeopixelComms::build_frame(const animations::Frame &f)
 {
     //
     // Reserve our frame buffer - how many bytes we will need
@@ -38,14 +29,7 @@ void NeopixelComms::send_frame(const animations::Frame &f)
         for (const BYTE blue_bit : convert_byte_to_spi(color.B))
             frame_buffer.push_back(blue_bit);
     }
-
-    //
-    // We have built this frame buffer, now send it and wait for however
-    // long this frame should stay displayed
-    //
-    get_serial().spi_write_data(frame_buffer);
-    std::chrono::milliseconds duration(f.hold_time_ms);
-    std::this_thread::sleep_for(duration);
+    return std::move(frame_buffer);
 };
 
 //
@@ -78,14 +62,15 @@ int main()
     serial::SerialConnection s;
     s.configure_spi_defaults();
 
-    s.write_data({0x8F, 0xFF, 0xFF});
+    NeopixelComms c;
 
-    // NeopixelComms c(s);
+    animations::Frame frame;
+    frame.colors = std::vector<animations::Color>(24, animations::WHITE);
+    frame.hold_time_ms = 500;
 
-    // animations::Frame frame;
-    // frame.colors = std::vector<animations::Color>(24, animations::BLUE);
-    // frame.hold_time_ms = 500;
-
-    // while (true)
-    //     c.send_frame(frame);
+    while (true)
+    {
+        s.spi_write_data(c.build_frame(frame));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    }
 }
