@@ -21,8 +21,6 @@ SerialConnection::SerialConnection(const unsigned int device_number)
     // Let's do some basic set up of the port here, don't trust me - trust
     // http://www.ftdichip.com/Support/Documents/AppNotes/AN_135_MPSSE_Basics.pdf
     //
-    //TEMP
-    return;
 
     //
     // First check if there is a valid device to use
@@ -98,15 +96,15 @@ SerialConnection::~SerialConnection()
 
 bool SerialConnection::write_data(ByteVector_t data) const
 {
-    const unsigned int bytes_to_send = data.size();
+    const unsigned int bytes_to_send = static_cast<unsigned int>(data.size());
     unsigned int bytes_sent = 0;
     FT_STATUS ft_status = FT_Write(ft_handle, data.data(), bytes_to_send, &bytes_sent);
 
-    // for (BYTE &b : data)
-    // {
-    //     std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (uint32_t) b << " ";
-    // }
-    // std::cout << "(" << ft_status << ")" << " sent: " << bytes_sent << std::endl;
+    for (BYTE &b : data)
+    {
+        std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (uint32_t) b << " ";
+    }
+    std::cout << "(" << ft_status << ")" << " sent: " << bytes_sent << std::endl;
 
     if (status_okay(ft_status) == false)
     {
@@ -163,7 +161,7 @@ SerialConnection::ByteVector_t SerialConnection::block_and_read(const unsigned i
 
 bool SerialConnection::spi_write_data(ByteVector_t data) const
 {
-    const uint16_t data_length = data.size() - 1;
+    const uint16_t data_length = static_cast<uint16_t>(data.size() - 1);
     const BYTE length_L = data_length & 0xFF;
     const BYTE length_H = (data_length >> 8);
 

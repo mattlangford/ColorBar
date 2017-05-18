@@ -52,9 +52,9 @@ struct Frame
     std::vector<Color> colors;
 
     //
-    // How long should we hold on this frame before going to the next
+    // How long (in milliseconds) should we hold on this frame before going to the next
     //
-    std::chrono::duration<double, std::chrono::milliseconds> hold_time;
+    unsigned long hold_time_ms;
 };
 
 class FramePlayer

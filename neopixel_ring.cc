@@ -44,7 +44,8 @@ void NeopixelComms::send_frame(const animations::Frame &f)
     // long this frame should stay displayed
     //
     get_serial().spi_write_data(frame_buffer);
-    std::this_thread::sleep_for(f.hold_time);
+    std::chrono::milliseconds duration(f.hold_time_ms);
+    std::this_thread::sleep_for(duration);
 };
 
 //
@@ -61,7 +62,7 @@ NeopixelComms::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
     BYTE mask = 0b10000000;
     for (size_t i = 0; i < 8; ++i)
     {
-        bytes[i] = byte && mask == 0 ? ZERO : ONE;
+        bytes[i] = static_cast<int>(byte && mask) == 0 ? ZERO : ONE;
         mask = mask >> 1;
     }
 
@@ -75,5 +76,16 @@ NeopixelComms::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
 int main()
 {
     serial::SerialConnection s;
-    NeopixelComms c(s);
+    s.configure_spi_defaults();
+
+    s.write_data({0x8F, 0xFF, 0xFF});
+
+    // NeopixelComms c(s);
+
+    // animations::Frame frame;
+    // frame.colors = std::vector<animations::Color>(24, animations::BLUE);
+    // frame.hold_time_ms = 500;
+
+    // while (true)
+    //     c.send_frame(frame);
 }
