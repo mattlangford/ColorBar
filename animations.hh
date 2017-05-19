@@ -1,7 +1,13 @@
 #pragma once
-#include <chrono>
+#include <memory>
 #include <stddef.h>
 #include <vector>
+
+namespace serial
+{
+    class SerialConnection;
+    class CommunicationBase;
+}
 
 namespace animations
 {
@@ -35,9 +41,10 @@ struct Color
 };
 
 static Color BLACK = Color(0, 0, 0);
+static Color BLUE = Color(0, 0, 20);
+static Color GREEN = Color(0, 20, 0);
+static Color RED = Color(20, 0, 0);
 static Color WHITE = Color(255, 255, 255);
-static Color BLUE = Color(0, 0, 255);
-static Color RED = Color(255, 0, 0);
 
 //
 // Single Frame struct
@@ -58,14 +65,32 @@ struct Frame
     unsigned long hold_time_ms;
 };
 
-class FramePlayer
-{
 //
-// Playback a series of frames given a communication device
+// Play a vector of frames using the communication device and serial connection
 //
+void play_frames(const std::vector<Frame> &frames,
+                 const std::unique_ptr<serial::CommunicationBase> &comms,
+                 const serial::SerialConnection &serial);
 
+//
+// Builds a frame with some percent of the entire frame being green and the rest
+// being red
+//
+Frame green_percent_bar(const double percent, const size_t led_count);
 
+//
+// Builds a vector of frames that transitions between two percentages
+// in some number of steps
+//
+std::vector<Frame> green_percent_bar_ramp(const double percent_start,
+                                          const double percent_end,
+                                          const size_t led_count,
+                                          const unsigned long duration_ms,
+                                          const size_t step_count = 10);
 
-};
+std::vector<Frame> fade(const Frame &frame_start,
+                        const Frame &frame_end,
+                        const double duration_ms,
+                        const size_t step_count = 10);
 
 } // namespace colorama

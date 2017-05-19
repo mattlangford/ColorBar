@@ -1,7 +1,12 @@
 #pragma once
 #include "ftd2xx.h"
+#include <memory>
 #include <vector>
-#include "animations.hh"
+
+namespace animations
+{
+    class Frame;
+}
 
 namespace serial
 {
@@ -145,5 +150,7 @@ public: // methods ///////////////////////////////////////////////////////////
     virtual ByteVector_t build_frame(const animations::Frame &f) = 0;
 
 };
+
+using CommunicationBase_ptr = std::unique_ptr<CommunicationBase>;
 
 } // namespace serial

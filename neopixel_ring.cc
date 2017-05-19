@@ -1,3 +1,4 @@
+#include <boost/python.hpp>
 #include <iostream>
 #include <thread>
 #include "neopixel_ring.hh"
@@ -46,7 +47,7 @@ NeopixelComms::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
     BYTE mask = 0b10000000;
     for (size_t i = 0; i < 8; ++i)
     {
-        bytes[i] = static_cast<int>(byte && mask) == 0 ? ZERO : ONE;
+        bytes[i] = static_cast<int>(byte & mask) == 0 ? ZERO : ONE;
         mask = mask >> 1;
     }
 
@@ -57,20 +58,36 @@ NeopixelComms::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
 // ############################################################################
 //
 
+
+// BOOST_PYTHON_MODULE(neopixel_driver)
+// {
+//     using namespace boost::python;
+//     def("test", test);
+// }
+
 int main()
 {
     serial::SerialConnection s;
     s.configure_spi_defaults();
 
-    NeopixelComms c;
+    serial::CommunicationBase_ptr neopixel = std::make_unique<NeopixelComms>();
 
-    animations::Frame frame;
-    frame.colors = std::vector<animations::Color>(24, animations::WHITE);
-    frame.hold_time_ms = 500;
+    std::vector<animations::Frame> frames = animations::green_percent_bar_ramp(0, 1, 24, 500, 24);
 
-    while (true)
-    {
-        s.spi_write_data(c.build_frame(frame));
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-    }
+    animations::play_frames(frames, neopixel, s);
+
+    std::chrono::seconds sleep(1);
+    std::this_thread::sleep_for(sleep);
+
+    animations::Frame bg = frames.back();
+    bg.hold_time_ms = 50;
+    animations::Frame blue;
+    blue.colors = std::vector<animations::Color>(24, animations::BLUE);
+    blue.hold_time_ms = 50;
+
+    frames = {blue, bg, blue, bg, blue, bg};
+    animations::play_frames(frames, neopixel, s);
+
+    frames = animations::green_percent_bar_ramp(1, 0.6, 24, 500);
+    animations::play_frames(frames, neopixel, s);
 }

@@ -113,7 +113,7 @@ bool SerialConnection::write_data(ByteVector_t data) const
     {
         std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (uint32_t) b << " ";
     }
-    std::cout << "(" << ft_status << ")" << " sent: " << bytes_sent << std::endl;
+    std::cout << std::dec << "(" << ft_status << ")" << " sent: " << bytes_sent << std::endl;
 
     if (status_okay(ft_status) == false)
     {
