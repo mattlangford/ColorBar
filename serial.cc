@@ -109,11 +109,11 @@ bool SerialConnection::write_data(ByteVector_t data) const
     unsigned int bytes_sent = 0;
     FT_STATUS ft_status = FT_Write(ft_handle, data.data(), bytes_to_send, &bytes_sent);
 
-    for (BYTE &b : data)
-    {
-        std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (uint32_t) b << " ";
-    }
-    std::cout << std::dec << "(" << ft_status << ")" << " sent: " << bytes_sent << std::endl;
+    // for (BYTE &b : data)
+    // {
+    //     std::cout << "0x" << std::hex << std::setfill('0') << std::setw(2) << (uint32_t) b << " ";
+    // }
+    // std::cout << std::dec << "(" << ft_status << ")" << " sent: " << bytes_sent << std::endl;
 
     if (status_okay(ft_status) == false)
     {
@@ -310,4 +310,5 @@ inline void SerialConnection::check_bad_response(const ByteVector_t &recv_buffer
         std::cout << std::endl;
     }
 }
+
 } // namespace serial

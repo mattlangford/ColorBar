@@ -9,7 +9,7 @@ namespace animations
 {
 
 void play_frames(const std::vector<Frame> &frames,
-                 const serial::CommunicationBase_ptr &comms,
+                 const serial::CommunicationBase_ptr comms,
                  const serial::SerialConnection &serial)
 {
     for (const Frame &frame : frames)

@@ -69,7 +69,7 @@ struct Frame
 // Play a vector of frames using the communication device and serial connection
 //
 void play_frames(const std::vector<Frame> &frames,
-                 const std::unique_ptr<serial::CommunicationBase> &comms,
+                 const std::shared_ptr<serial::CommunicationBase> comms,
                  const serial::SerialConnection &serial);
 
 //

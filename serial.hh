@@ -151,6 +151,8 @@ public: // methods ///////////////////////////////////////////////////////////
 
 };
 
-using CommunicationBase_ptr = std::unique_ptr<CommunicationBase>;
+using SerialConnection_ptr = std::shared_ptr<SerialConnection>;
+using CommunicationBase_ptr = std::shared_ptr<CommunicationBase>;
+
 
 } // namespace serial

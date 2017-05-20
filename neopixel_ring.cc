@@ -31,7 +31,7 @@ NeopixelComms::ByteVector_t NeopixelComms::build_frame(const animations::Frame &
             frame_buffer.push_back(blue_bit);
     }
     return std::move(frame_buffer);
-};
+}
 
 //
 // ### private methods ########################################################
@@ -58,36 +58,51 @@ NeopixelComms::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
 // ############################################################################
 //
 
-
-// BOOST_PYTHON_MODULE(neopixel_driver)
-// {
-//     using namespace boost::python;
-//     def("test", test);
-// }
-
-int main()
+PythonController::PythonController(const size_t led_count_)
+    : led_count(led_count_), current_percent(0.0), serial()
 {
-    serial::SerialConnection s;
-    s.configure_spi_defaults();
+    serial.configure_spi_defaults();
 
-    serial::CommunicationBase_ptr neopixel = std::make_unique<NeopixelComms>();
+    animations::Frame blank;
+    blank.colors = std::vector<animations::Color>(led_count, animations::RED);
 
-    std::vector<animations::Frame> frames = animations::green_percent_bar_ramp(0, 1, 24, 500, 24);
+    NeopixelComms comms;
+    serial.spi_write_data(comms.build_frame(blank));
+}
 
-    animations::play_frames(frames, neopixel, s);
+//
+// ############################################################################
+//
 
-    std::chrono::seconds sleep(1);
-    std::this_thread::sleep_for(sleep);
+void PythonController::update_percent(const double percent, const long duration_ms)
+{
+    if (percent > 1)
+    {
+        std::cout << "Percent must be less than 1!" << std::endl;
+        return;
+    }
 
-    animations::Frame bg = frames.back();
-    bg.hold_time_ms = 50;
-    animations::Frame blue;
-    blue.colors = std::vector<animations::Color>(24, animations::BLUE);
-    blue.hold_time_ms = 50;
+    std::vector<animations::Frame> frames =
+        animations::green_percent_bar_ramp(current_percent, percent, led_count, duration_ms);
+    current_percent = percent;
 
-    frames = {blue, bg, blue, bg, blue, bg};
-    animations::play_frames(frames, neopixel, s);
+    NeopixelComms comms;
+    for (const animations::Frame &frame : frames)
+    {
+        serial.spi_write_data(comms.build_frame(frame));
 
-    frames = animations::green_percent_bar_ramp(1, 0.6, 24, 500);
-    animations::play_frames(frames, neopixel, s);
+        std::chrono::milliseconds duration(frame.hold_time_ms);
+        std::this_thread::sleep_for(duration);
+    }
+}
+
+//
+// ############################################################################
+//
+
+BOOST_PYTHON_MODULE(neopixel_driver)
+{
+    using namespace boost::python;
+    class_<PythonController>("NeoPixelDriver", init<const size_t>())
+        .def("update_percent", &PythonController::update_percent);
 }

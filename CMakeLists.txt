@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.11)
 project(UKF)
 
 SET(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_CXX_FLAGS "-g -O0")
+SET(CMAKE_CXX_FLAGS "-g -O0 -fPIC")
 
 # FTDI Driver
 find_library(ftdi_driver ftd2xx)
