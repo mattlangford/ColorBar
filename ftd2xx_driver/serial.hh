@@ -3,11 +3,6 @@
 #include <memory>
 #include <vector>
 
-namespace animations
-{
-    class Frame;
-}
-
 namespace serial
 {
 
@@ -35,6 +30,11 @@ enum mpsse : unsigned char
 };
 
 //
+// Public type used by others when writing data to the board
+//
+using ByteVector_t = std::vector<BYTE>;
+
+//
 // Connects to an FTDI serial connection and has some nice wrappers C++11 around the
 // gross C
 //
@@ -46,12 +46,6 @@ public: // constructor ////////////////////////////////////////////////////////
     SerialConnection(const SerialConnection &s);
 
     ~SerialConnection();
-
-public: // types //////////////////////////////////////////////////////////////
-    //
-    // Public type used by others when writing data to the board
-    //
-    using ByteVector_t = std::vector<BYTE>;
 
 public: // publicest methods //////////////////////////////////////////////////
     //
@@ -120,39 +114,8 @@ private: // members ///////////////////////////////////////////////////////////
 
 };
 
-class CommunicationBase
-{
-//
-// Base class that provides general interface for displaying Frames on a display
-//
-public: // types //////////////////////////////////////////////////////////////
-    //
-    //
-    //
-    using ByteVector_t = SerialConnection::ByteVector_t;
-
-public: // constructor ////////////////////////////////////////////////////////
-    //
-    //
-    //
-    CommunicationBase() = default;
-
-    //
-    //
-    //
-    virtual ~CommunicationBase() {};
-
-public: // methods ///////////////////////////////////////////////////////////
-    //
-    // Given a frame, use the internal serial device to send the frame over
-    // the wire
-    //
-    virtual ByteVector_t build_frame(const animations::Frame &f) = 0;
-
-};
 
 using SerialConnection_ptr = std::shared_ptr<SerialConnection>;
-using CommunicationBase_ptr = std::shared_ptr<CommunicationBase>;
 
 
 } // namespace serial

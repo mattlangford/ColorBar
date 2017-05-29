@@ -1,20 +1,21 @@
 #include <boost/python.hpp>
 #include <iostream>
 #include <thread>
-#include "neopixel_ring.hh"
+
+#include "neopixel_driver.hh"
 
 //
 // ### public methods #########################################################
 //
 
-NeopixelComms::ByteVector_t NeopixelComms::build_frame(const animations::Frame &f)
+serial::ByteVector_t NeopixelComms::build_frame(const animations::Frame &f)
 {
     //
     // Reserve our frame buffer - how many bytes we will need
     // to command some number of LED's. Multiply that by 8 since it
     // takes us one byte to transmit one bit
     //
-    ByteVector_t frame_buffer;
+    serial::ByteVector_t frame_buffer;
     frame_buffer.reserve(f.colors.size() * 3 * 8);
 
     for (const animations::Color color : f.colors)
@@ -37,13 +38,13 @@ NeopixelComms::ByteVector_t NeopixelComms::build_frame(const animations::Frame &
 // ### private methods ########################################################
 //
 
-NeopixelComms::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
+serial::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
 {
     //
     // We will return a ByteVector composed of 8 bytes. The MSB of the original
     // byte will be the zeroth index in the vector
     //
-    ByteVector_t bytes(8);
+    serial::ByteVector_t bytes(8);
     BYTE mask = 0b10000000;
     for (size_t i = 0; i < 8; ++i)
     {
@@ -83,7 +84,7 @@ void PythonController::update_percent(const double percent, const long duration_
     }
 
     std::vector<animations::Frame> frames =
-        animations::green_percent_bar_ramp(current_percent, percent, led_count, duration_ms);
+        animations::green_percent_bar_ramp(current_percent, percent, led_count, duration_ms, led_count);
     current_percent = percent;
 
     NeopixelComms comms;
@@ -102,6 +103,7 @@ void PythonController::update_percent(const double percent, const long duration_
 
 BOOST_PYTHON_MODULE(neopixel_driver)
 {
+    // This only lets someone animate a green/red bar for the performance meter
     using namespace boost::python;
     class_<PythonController>("NeoPixelDriver", init<const size_t>())
         .def("update_percent", &PythonController::update_percent);

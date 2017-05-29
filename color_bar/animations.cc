@@ -1,15 +1,16 @@
 #include <assert.h>
 #include <chrono>
-#include "serial.hh"
-#include "animations.hh"
-#include <thread>
 #include <iostream>
+#include <thread>
+
+#include "animations.hh"
+#include "../ftd2xx_driver/serial.hh"
 
 namespace animations
 {
 
 void play_frames(const std::vector<Frame> &frames,
-                 const serial::CommunicationBase_ptr comms,
+                 const CommunicationBase_ptr comms,
                  const serial::SerialConnection &serial)
 {
     for (const Frame &frame : frames)
@@ -65,11 +66,7 @@ std::vector<Frame> fade(const Frame &frame_start,
                         const double duration_ms,
                         const size_t step_count)
 {
-    assert(frame_start.colors.size());
-    std::vector<Frame> frames(step_count);
-    for (size_t i = 0; i < step_count; ++i)
-    {
-    }
-    return frames;
+    // TODO
+    return {};
 }
 } // namespace animations

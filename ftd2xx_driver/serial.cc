@@ -127,7 +127,7 @@ bool SerialConnection::write_data(ByteVector_t data) const
 // ############################################################################
 //
 
-SerialConnection::ByteVector_t SerialConnection::block_and_read(const unsigned int num_bytes_to_read) const
+ByteVector_t SerialConnection::block_and_read(const unsigned int num_bytes_to_read) const
 {
     unsigned int bytes_ready = 0;
     FT_STATUS ft_status = FT_OK;

@@ -1,8 +1,8 @@
 #pragma once
-#include "serial.hh"
 #include "animations.hh"
+#include "../ftd2xx_driver/serial.hh"
 
-class NeopixelComms final : public serial::CommunicationBase
+class NeopixelComms final : public animations::CommunicationBase
 {
 public: // destructor /////////////////////////////////////////////////////////
     //
@@ -21,7 +21,7 @@ public: // methods ////////////////////////////////////////////////////////////
     //
     // Send a frame to the neopixel display one byte at a time
     //
-    ByteVector_t build_frame(const animations::Frame &f);
+    serial::ByteVector_t build_frame(const animations::Frame &f);
 
 private: // methods ///////////////////////////////////////////////////////////
     //
@@ -29,7 +29,7 @@ private: // methods ///////////////////////////////////////////////////////////
     // Since the Neopixel communicates in a weird protocol, this
     // conversion is required.
     //
-    ByteVector_t convert_byte_to_spi(const BYTE &byte);
+    serial::ByteVector_t convert_byte_to_spi(const BYTE &byte);
 
 };
 

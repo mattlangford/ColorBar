@@ -6,7 +6,6 @@
 namespace serial
 {
     class SerialConnection;
-    class CommunicationBase;
 }
 
 namespace animations
@@ -66,10 +65,39 @@ struct Frame
 };
 
 //
+// Base class that provides general interface for displaying Frames on a display
+// Maybe this shouldn't go here?
+//
+class CommunicationBase
+{
+public: // constructor ////////////////////////////////////////////////////////
+    //
+    //
+    //
+    CommunicationBase() = default;
+
+    //
+    //
+    //
+    virtual ~CommunicationBase() = default;
+
+public: // methods ///////////////////////////////////////////////////////////
+    //
+    // Given a frame, return a ByteVector_t to send over the wire
+    //
+    virtual std::vector<unsigned char> build_frame(const animations::Frame &f) = 0;
+};
+using CommunicationBase_ptr = std::shared_ptr<CommunicationBase>;
+
+//
+// Functions that help build animations
+//
+
+//
 // Play a vector of frames using the communication device and serial connection
 //
 void play_frames(const std::vector<Frame> &frames,
-                 const std::shared_ptr<serial::CommunicationBase> comms,
+                 const std::shared_ptr<CommunicationBase> comms,
                  const serial::SerialConnection &serial);
 
 //
@@ -86,11 +114,11 @@ std::vector<Frame> green_percent_bar_ramp(const double percent_start,
                                           const double percent_end,
                                           const size_t led_count,
                                           const unsigned long duration_ms,
-                                          const size_t step_count = 10);
+                                          const size_t step_count = 100);
 
 std::vector<Frame> fade(const Frame &frame_start,
                         const Frame &frame_end,
                         const double duration_ms,
-                        const size_t step_count = 10);
+                        const size_t step_count = 100);
 
 } // namespace colorama

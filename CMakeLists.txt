@@ -9,24 +9,24 @@ find_library(ftdi_driver ftd2xx)
 message("FTDI driver is at: ${ftdi_driver}")
 
 # Python
-find_package( PythonLibs 2.7 REQUIRED )
-include_directories( ${PYTHON_INCLUDE_DIRS} )
+find_package(PythonLibs 2.7 REQUIRED)
+include_directories(${PYTHON_INCLUDE_DIRS})
 
 # Boost
-find_package( Boost COMPONENTS python REQUIRED )
-include_directories( ${Boost_INCLUDE_DIR} )
+find_package(Boost COMPONENTS python REQUIRED)
+include_directories(${Boost_INCLUDE_DIR})
 
 # Libraries
-add_library(animations animations.cc)
-add_library(serial serial.cc)
+add_library(animations color_bar/animations.cc)
+add_library(serial ftd2xx_driver/serial.cc)
 target_link_libraries(serial ${ftdi_driver})
 
 # Build the python library
-add_library(neopixel_driver SHARED neopixel_ring.cc)
-target_link_libraries( neopixel_driver
+add_library(neopixel_driver SHARED color_bar/neopixel_driver.cc)
+target_link_libraries(neopixel_driver
     serial
     animations
     ${Boost_LIBRARIES}
     ${PYTHON_LIBRARIES}
 )
-set_target_properties( neopixel_driver PROPERTIES PREFIX "" )
+set_target_properties(neopixel_driver PROPERTIES PREFIX "")
