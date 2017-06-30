@@ -36,14 +36,13 @@ private: // methods ///////////////////////////////////////////////////////////
 class PythonController
 {
 public: // constructor ///////////////////////////////////////////////////////
-    PythonController(const size_t led_count_);
+    PythonController(const size_t led_count_, const size_t pixel_groups_);
     PythonController(const PythonController &p) = default;
 
 public: // public methods ////////////////////////////////////////////////////
-    void update_percent(const double percent, const long duration_ms = 500);
+    void update_frame(const std::vector<uint8_t> &frame);
 
 private: // private members //////////////////////////////////////////////////
     size_t led_count;
-    double current_percent;
     serial::SerialConnection serial;
 };

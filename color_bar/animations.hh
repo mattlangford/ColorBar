@@ -53,6 +53,12 @@ static Color WHITE = Color(255, 255, 255);
 //
 struct Frame
 {
+    Frame() = default;
+
+    Frame(const std::vector<Color> &colors_) : colors(colors_), hold_time_ms(0)
+    {
+    }
+
     //
     // Matches LED numbers one to one. Index 0 represents the first LED
     //

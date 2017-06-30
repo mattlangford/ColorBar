@@ -59,10 +59,10 @@ serial::ByteVector_t NeopixelComms::convert_byte_to_spi(const BYTE &byte)
 // ############################################################################
 //
 
-PythonController::PythonController(const size_t led_count_)
-    : led_count(led_count_), current_percent(0.0), serial()
+PythonController::PythonController(const size_t led_count_, const size_t pixel_groups_)
+    : led_count(led_count_), serial()
 {
-    serial.configure_spi_defaults();
+    serial.configure_spi_defaults(5E6);
 
     animations::Frame blank;
     blank.colors = std::vector<animations::Color>(led_count, animations::RED);
@@ -75,36 +75,21 @@ PythonController::PythonController(const size_t led_count_)
 // ############################################################################
 //
 
-void PythonController::update_percent(const double percent, const long duration_ms)
-{
-    if (percent > 1)
-    {
-        std::cout << "Percent must be less than 1!" << std::endl;
-        return;
-    }
-
-    std::vector<animations::Frame> frames =
-        animations::green_percent_bar_ramp(current_percent, percent, led_count, duration_ms, led_count);
-    current_percent = percent;
-
-    NeopixelComms comms;
-    for (const animations::Frame &frame : frames)
-    {
-        serial.spi_write_data(comms.build_frame(frame));
-
-        std::chrono::milliseconds duration(frame.hold_time_ms);
-        std::this_thread::sleep_for(duration);
-    }
-}
-
-//
-// ############################################################################
-//
-
 BOOST_PYTHON_MODULE(neopixel_driver)
 {
     // This only lets someone animate a green/red bar for the performance meter
     using namespace boost::python;
-    class_<PythonController>("NeoPixelDriver", init<const size_t>())
-        .def("update_percent", &PythonController::update_percent);
+    class_<animations::Color>("Color")
+        .def(init<animations::uchar_t, animations::uchar_t, animations::uchar_t>())
+        .def_readwrite("r", &animations::Color::R)
+        .def_readwrite("g", &animations::Color::G)
+        .def_readwrite("b", &animations::Color::B);
+
+    class_<animations::Frame>("Frame")
+        .def(init<const std::vector<animations::Color>&>())
+        .def_readwrite("colors", &animations::Frame::colors);
+
+    // class_<PythonController>("NeoPixelDriver", init<const size_t>())
+    //     .def("update_pixel", &PythonController::update_percent)
+    //     .def("update_pixel_group", &PythonController::update_percent);
 }
